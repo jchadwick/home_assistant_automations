@@ -1,0 +1,70 @@
+blueprint:
+  name: Motion-activated Light with Light Sensor
+  description: Turn on a light when motion is detected and light is dark enough.
+  domain: automation
+  source_url: https://github.com/jchadwick/home_assistant_automations/blob/main/automations/motion_light_with_light_sensor.yaml
+  input:
+    motion_entity:
+      name: Motion Sensor
+      selector:
+        entity:
+          domain: binary_sensor
+          device_class: motion
+    light_target:
+      name: Light
+      selector:
+        target:
+          entity:
+            domain: light
+    no_motion_wait:
+      name: Wait time
+      description: Time to leave the light on after last motion is detected.
+      default: 120
+      selector:
+        number:
+          min: 0
+          max: 3600
+          unit_of_measurement: seconds
+    light_sensor:
+      name: Light sensor
+      description: Light sensor to read from
+      selector:
+        target:
+          entity:
+            domain: sensor
+    light_threshold:
+      name: Light threshold 
+      description: Light sensor‘s lower threshold 
+      default: 150
+      selector:
+        number:
+          min: 0
+          max: 255
+
+# If motion is detected within the delay,
+# we restart the script.
+mode: restart
+max_exceeded: silent
+
+trigger:
+  platform: state
+  entity_id: !input motion_entity
+  from: "off"
+  to: "on"
+
+condition:
+  - condition: numeric_state
+    entity_id: !input light_sensor
+    below: !input light_threshold
+
+action:
+  - service: light.turn_on
+    target: !input light_target
+  - wait_for_trigger:
+      platform: state
+      entity_id: !input motion_entity
+      from: "on"
+      to: "off"
+  - delay: !input no_motion_wait
+  - service: light.turn_off
+    target: !input light_target

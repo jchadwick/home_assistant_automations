@@ -1,2 +1,2 @@
-# home_assistant_automations
+# Home Assistant Automations
 Collection of Home Assistant automations, blueprints, and scripts
